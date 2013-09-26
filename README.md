@@ -31,3 +31,48 @@ These are instructions for building Giraph 1.0 against CDH 4.2.0.
 6. This will install giraph-core-1.0.0.jar in your local maven repository specifically usable for CDH 4.2.0
 
 7. You should now be able to build the LouvainModularity job using ./build.sh
+
+Example Run
+-----------
+A small example is included to verify installation and the general concept in the 'example' directory.
+
+To run, simply call ./run_example.sh from the 'example' directory.
+
+Other Information
+-----------------
+
+The graph must be stored as a bi-directional weighted graph with one vertex represented below in a 
+tab-delimited file stored on hdfs.  The columns required are node id, internal node weight, and the edge 
+list.  The edge list should be a comma-separated list of edges where each edge is represented by the form id:weight.  
+
+For example...
+
+12345    0    1:1,2:1,9:33
+1    0    12345:1
+2    0    12345:1
+9    0    12345:33
+
+In this case vertex 12345 has weight 0 and 3 edges.  Each edge appears identically for both its vertices.
+
+
+The giraph job outputs a tab-delimited hdfs file with the following fields: id, community id, internal weight, and
+edge list where the edge list in the giraph output is a list of edges to communities, and not the original edge 
+list from the input.
+
+The map reduce job outputs an hdfs file that matches the required input to the giraph job and represents an community compressed version of the graph.  Each node represents an entire community. 
+
+For custom configuration options pass them into giraph runner as -ca arguments (see louvain.py).  
+The following is a list of custom arguments and their defaults.
+
+
+fs.defaultFS	
+  the default hdfs file system, normally this will not need to be set as it will correctly be read from the environment.
+
+actual.Q.aggregators (default 1)
+  Number of aggregators to split the actual Q aggregator into, using multiple aggregators may improve performance 
+
+minimum.progress	(default 0)
+  The minimum reduction in total nodes changed per step seen as making progress
+
+progress.tries	(defaul 1)
+	The number of times minimum.progress can be not reached before the iteration halts.
