@@ -6,8 +6,6 @@ import time
 
 GIRAPH_SLAVES=1
 ZK_LIST='localhost:2181'
-#ZK_LIST='arcus2:2181,arcus3:2181,arcus4:2181'
-#ZK_LIST='r104u04.xdata.data-tactics-corp.com:2181,r104u20.xdata.data-tactics-corp.com:2181,r101u16.xdata.data-tactics-corp.com:2181'
 
 def main(ip,op):
   print ""
