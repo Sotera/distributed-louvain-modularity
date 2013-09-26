@@ -146,7 +146,6 @@ public class LouvainMasterCompute extends DefaultMasterCompute{
                 String outputPath = getConf().get("mapred.output.dir");
                 String dir = outputPath.substring(0, outputPath.lastIndexOf("/"));
                 String filename = getConf().get("fs.defaultFS")+dir+"/_COMPLETE";
-                //String filename = "hdfs://localhost:8020"+dir+"/_COMPLETE";
                 System.out.println("Writing "+filename);
                 writeFile(filename,message);
         }
@@ -160,7 +159,6 @@ public class LouvainMasterCompute extends DefaultMasterCompute{
                 String stage = outputPath.substring(lastIndexOfSlash+1);
                 String stagenumber = stage.substring(stage.lastIndexOf("_")+1);
                 String filename = getConf().get("fs.defaultFS")+dir+"/_q_"+stagenumber;
-                //String filename = "hdfs://localhost:8020"+dir+"/_q_"+stagenumber;
                 writeFile(filename,message);
 
         }
@@ -178,7 +176,6 @@ public class LouvainMasterCompute extends DefaultMasterCompute{
                 }
                 else{
                         String filename = getConf().get("fs.defaultFS")+dir+"/_q_"+previousStageNumber;
-                        //String filename = "hdfs://localhost:8020"+dir+"/_q_"+previousStageNumber;
                         String result = this.readFile(filename).trim();
                         return Double.parseDouble(result);
                 }
