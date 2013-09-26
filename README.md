@@ -1,2 +1,2 @@
-distributed-louvain-modularity
+Distributed Louvain Modularity
 ==============================
