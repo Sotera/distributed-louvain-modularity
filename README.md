@@ -49,10 +49,10 @@ list.  The edge list should be a comma-separated list of edges where each edge i
 
 For example...
 
->12345	0	1:1,2:1,9:33<br>
->1	0	12345:1<br>
->2	0	12345:1<br>
->9	0	12345:33<br>
+> 12345	0	1:1,2:1,9:33<br>
+> 1	0	12345:1<br>
+> 2	0	12345:1<br>
+> 9	0	12345:33<br>
 
 In this case vertex 12345 has weight 0 and 3 edges.  Each edge appears identically for both its vertices.
 
@@ -67,14 +67,14 @@ For custom configuration options pass them into giraph runner as -ca arguments (
 The following is a list of custom arguments and their defaults.
 
 
-fs.defaultFS	
+> fs.defaultFS	
   the default hdfs file system, normally this will not need to be set as it will correctly be read from the environment.
 
-actual.Q.aggregators (default 1)
+> actual.Q.aggregators (default 1)
   Number of aggregators to split the actual Q aggregator into, using multiple aggregators may improve performance 
 
-minimum.progress	(default 0)
+> minimum.progress	(default 0)
   The minimum reduction in total nodes changed per step seen as making progress
 
-progress.tries	(defaul 1)
+> progress.tries	(default 1)
 	The number of times minimum.progress can be not reached before the iteration halts.
