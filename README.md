@@ -1,5 +1,5 @@
 Distributed Louvain Modularity
-==============================
+=
 This project is a Giraph/Hadoop implementation of a distributed version of the Louvain community detection algorithm
 described in "Fast unfolding of communities in large networks” - http://arxiv.org/pdf/0803.0476.pdf 
 
@@ -12,4 +12,4 @@ There are three main parts to the project.
 The map reduce and giraph job then run in a cycle, detecting communities and compressing the graph until no significant progress is being made, and then exits.
 
 BUILD
-===
+-
