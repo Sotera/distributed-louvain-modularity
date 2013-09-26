@@ -18,16 +18,16 @@ Then install the giraph-core-with-dependencies.jar into your local mvn repositor
 
 These are instructions for building Giraph 1.0 against CDH 4.2.0.
 
-1) Download Giraph (http://giraph.apache.org/) -> (http://www.apache.org/dyn/closer.cgi/giraph/giraph-1.0.0)
+1. Download Giraph (http://giraph.apache.org/) -> (http://www.apache.org/dyn/closer.cgi/giraph/giraph-1.0.0)
 
-2) Extract.
+2. Extract.
 
-3) Find the hadoop_cdh4.1.2 profile within pom.xml and copy the entire section and paste below.
+3. Find the hadoop_cdh4.1.2 profile within pom.xml and copy the entire section and paste below.
 
-4) Edit the new section changing instances of 4.1.2 to 4.2.0 within the section.
+4. Edit the new section changing instances of 4.1.2 to 4.2.0 within the section.
 
-5) From the command line at the top level type 'mvn -Phadoop_cdh4.2.0 -DskipTests clean install'
+5. From the command line at the top level type 'mvn -Phadoop_cdh4.2.0 -DskipTests clean install'
 
-6) This will install giraph-core-1.0.0.jar in your local maven repository specifically usable for CDH 4.2.0
+6. This will install giraph-core-1.0.0.jar in your local maven repository specifically usable for CDH 4.2.0
 
-7) You should now be able to build the LouvainModularity job using ./build.sh
+7. You should now be able to build the LouvainModularity job using ./build.sh
