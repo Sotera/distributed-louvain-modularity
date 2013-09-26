@@ -12,4 +12,4 @@ There are three main parts to the project.
 The map reduce and giraph job then run in a cycle, detecting communities and compressing the graph until no significant progress is being made, and then exits.
 
 BUILD
-==============================
+===
