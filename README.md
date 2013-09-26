@@ -36,7 +36,9 @@ Example Run
 -----------
 A small example is included to verify installation and the general concept in the 'example' directory.
 
-To run, simply call ./run_example.sh from the 'example' directory.
+To run, go to the example directory and type
+
+> ./run_example.sh
 
 Other Information
 -----------------
