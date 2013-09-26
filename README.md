@@ -47,10 +47,10 @@ list.  The edge list should be a comma-separated list of edges where each edge i
 
 For example...
 
-12345    0    1:1,2:1,9:33
-1    0    12345:1
-2    0    12345:1
-9    0    12345:33
+>12345    0    1:1,2:1,9:33
+>1    0    12345:1
+>2    0    12345:1
+>9    0    12345:33
 
 In this case vertex 12345 has weight 0 and 3 edges.  Each edge appears identically for both its vertices.
 
