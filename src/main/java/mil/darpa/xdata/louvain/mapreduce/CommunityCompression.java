@@ -1,26 +1,14 @@
 package mil.darpa.xdata.louvain.mapreduce;
 
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.*;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
-
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.FileInputFormat;
-import org.apache.hadoop.mapred.FileOutputFormat;
-import org.apache.hadoop.mapred.JobClient;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.MapReduceBase;
-import org.apache.hadoop.mapred.Mapper;
-import org.apache.hadoop.mapred.OutputCollector;
-import org.apache.hadoop.mapred.Reducer;
-import org.apache.hadoop.mapred.Reporter;
-import org.apache.hadoop.mapred.TextInputFormat;
-import org.apache.hadoop.mapred.TextOutputFormat;
-
-
 
 
 /**
@@ -39,17 +27,17 @@ public class CommunityCompression {
 
 	
 	
-	public static class Map extends MapReduceBase implements Mapper<LongWritable, Text, LongWritable, LouvainVertexWritable> {
+	public static class Map extends MapReduceBase implements Mapper<LongWritable, Text, Text, LouvainVertexWritable> {
 		
 		@Override
-		public void map(LongWritable key, Text value, OutputCollector<LongWritable, LouvainVertexWritable> output, Reporter reporter) throws IOException {
+		public void map(LongWritable key, Text value, OutputCollector<Text, LouvainVertexWritable> output, Reporter reporter) throws IOException {
 			
 			String[] tokens = value.toString().trim().split("\t");
 			if (3 > tokens.length){
 				throw new IllegalArgumentException("Expected 4 cols: got "+tokens.length+"  from line: "+tokens.toString());
 			}
 
-			LongWritable outKey = new LongWritable(Long.parseLong(tokens[1])); // group by community
+			Text outKey = new Text(tokens[1]); // group by community
 			String edgeListStr = (tokens.length == 3) ? "" : tokens[3];
 			LouvainVertexWritable outValue = LouvainVertexWritable.fromTokens(tokens[2], edgeListStr);
 			output.collect(outKey, outValue);
@@ -58,19 +46,19 @@ public class CommunityCompression {
 	
 	
 
-	public static class Reduce extends MapReduceBase implements Reducer<LongWritable, LouvainVertexWritable, Text, Text> {
+	public static class Reduce extends MapReduceBase implements Reducer<Text, LouvainVertexWritable, Text, Text> {
 		
-		public void reduce(LongWritable key, Iterator<LouvainVertexWritable> values, OutputCollector<Text, Text> output, Reporter reporter) throws IOException {
-			long communityId = key.get();
+		public void reduce(Text key, Iterator<LouvainVertexWritable> values, OutputCollector<Text, Text> output, Reporter reporter) throws IOException {
+			String communityId = key.toString();
 			long weight = 0;
-			HashMap<Long,Long> edgeMap = new HashMap<Long,Long>();
+			HashMap<String,Long> edgeMap = new HashMap<String,Long>();
 			while (values.hasNext()){
 				LouvainVertexWritable vertex = values.next();
 				weight += vertex.weight;
-				for (Entry<Long, Long> entry : vertex.edges.entrySet()){
-					long entrykey = entry.getKey();
+				for (Entry<String, Long> entry : vertex.edges.entrySet()){
+					String entrykey = entry.getKey();
 					
-					if (entrykey == communityId){
+					if (entrykey.equals(communityId)){
 						weight += entry.getValue();
 					}
 					else if (edgeMap.containsKey(entrykey)){
@@ -85,7 +73,7 @@ public class CommunityCompression {
 			
 			StringBuilder b = new StringBuilder();
 			b.append(weight).append("\t");
-			for (Entry<Long, Long> entry : edgeMap.entrySet()){
+			for (Entry<String, Long> entry : edgeMap.entrySet()){
 				b.append(entry.getKey()).append(":").append(entry.getValue()).append(",");
 			}
 			b.setLength(b.length() - 1);
@@ -101,7 +89,7 @@ public class CommunityCompression {
 		JobConf conf = new JobConf(CommunityCompression.class);
 		conf.setJobName("Louvain graph compression");
 		
-		conf.setOutputKeyClass(LongWritable.class);
+		conf.setOutputKeyClass(Text.class);
 		conf.setOutputValueClass(LouvainVertexWritable.class);
 		
 		conf.setMapperClass(Map.class);

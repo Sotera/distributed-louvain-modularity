@@ -1,20 +1,21 @@
 package mil.darpa.xdata.louvain.giraph;
 
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableUtils;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
-
-import org.apache.hadoop.io.Writable;
 
 
 /**
  * The state of a vertex.
  *
  */
-public class LouvainNodeState implements Writable{
+public class LouvainNodeState implements Writable {
 
-	private long community;
+	private String community = "";
 	private long communitySigmaTotal;
 	
 	// the interanal edge weight of a node
@@ -40,7 +41,7 @@ public class LouvainNodeState implements Writable{
 	
 	@Override
 	public void readFields(DataInput in) throws IOException {
-		community = in.readLong();
+		community = WritableUtils.readString(in);
 		communitySigmaTotal = in.readLong();
 		internalWeight = in.readLong();
 		changed = in.readLong();
@@ -55,7 +56,7 @@ public class LouvainNodeState implements Writable{
 
 	@Override
 	public void write(DataOutput out) throws IOException {
-		out.writeLong(community);
+		WritableUtils.writeString(out, community);
 		out.writeLong(communitySigmaTotal);
 		out.writeLong(internalWeight);
 		out.writeLong(changed);
@@ -67,11 +68,11 @@ public class LouvainNodeState implements Writable{
 		
 	}
 
-	public long getCommunity() {
+	public String getCommunity() {
 		return community;
 	}
 
-	public void setCommunity(long community) {
+	public void setCommunity(String community) {
 		this.community = community;
 	}
 

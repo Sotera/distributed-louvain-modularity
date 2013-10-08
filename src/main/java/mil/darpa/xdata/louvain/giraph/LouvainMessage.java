@@ -1,25 +1,26 @@
 package mil.darpa.xdata.louvain.giraph;
 
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableUtils;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.hadoop.io.Writable;
-
 
 /**
- * messages sent between vertcies.
+ * messages sent between vertices.
  */
-public class LouvainMessage implements Writable{
+public class LouvainMessage implements Writable {
 
-	private long communityId;
+	private String communityId = "";
 	private long communitySigmaTotal;
 	private long edgeWeight;
-	private long sourceId;
+	private String sourceId = "";
 	
 	public LouvainMessage(){}
 	
-	public LouvainMessage(long communityId,long sigmaTotal,long weight,long sourceId){
+	public LouvainMessage(String communityId,long sigmaTotal,long weight,String sourceId){
 		this();
 		this.communityId = communityId;
 		this.communitySigmaTotal = sigmaTotal;
@@ -33,25 +34,27 @@ public class LouvainMessage implements Writable{
 	
 	@Override
 	public void readFields(DataInput in) throws IOException {
-		communityId = in.readLong();
+		communityId = WritableUtils.readString(in);
 		communitySigmaTotal = in.readLong();
 		edgeWeight = in.readLong();
-		sourceId = in.readLong();
+		sourceId = WritableUtils.readString(in);
 	}
 
 	@Override
 	public void write(DataOutput out) throws IOException {
-		out.writeLong(communityId);
+		WritableUtils.writeString(out, communityId);
+		//out.writeUTF(communityId);
 		out.writeLong(communitySigmaTotal);
 		out.writeLong(edgeWeight);
-		out.writeLong(sourceId);
+		//out.writeUTF(sourceId);
+		WritableUtils.writeString(out, sourceId);
 	}
 
-	public long getCommunityId() {
+	public String getCommunityId() {
 		return communityId;
 	}
 
-	public void setCommunityId(long l) {
+	public void setCommunityId(String l) {
 		this.communityId = l;
 	}
 
@@ -75,11 +78,11 @@ public class LouvainMessage implements Writable{
 		this.edgeWeight = edgeWeight;
 	}
 	
-	public long getSourceId(){
+	public String getSourceId(){
 		return sourceId;
 	}
 	
-	public void setSourceId(long sourceId){
+	public void setSourceId(String sourceId){
 		this.sourceId = sourceId;
 	}
 

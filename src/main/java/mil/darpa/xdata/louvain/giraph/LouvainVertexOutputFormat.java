@@ -1,8 +1,5 @@
 package mil.darpa.xdata.louvain.giraph;
 
-import java.io.IOException;
-
-
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.graph.Vertex;
 import org.apache.giraph.io.formats.TextVertexOutputFormat;
@@ -10,6 +7,7 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
+import java.io.IOException;
 
 
 /**
@@ -21,7 +19,7 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
  *  the edge list is a comma seperated list of edges of the form    id:weight
  * 
  */
-public class LouvainVertexOutputFormat extends TextVertexOutputFormat<LongWritable,LouvainNodeState,LongWritable>{
+public class LouvainVertexOutputFormat extends TextVertexOutputFormat<Text,LouvainNodeState,LongWritable>{
 
 	@Override
 	public TextVertexWriter createVertexWriter(
@@ -34,7 +32,7 @@ public class LouvainVertexOutputFormat extends TextVertexOutputFormat<LongWritab
 
 		@Override
 		public void writeVertex(
-				Vertex<LongWritable, LouvainNodeState, LongWritable, ?> vertex)
+				Vertex<Text, LouvainNodeState, LongWritable, ?> vertex)
 				throws IOException, InterruptedException {
 			StringBuilder b = new StringBuilder();
 			b.append(vertex.getValue().getCommunity());
@@ -42,7 +40,7 @@ public class LouvainVertexOutputFormat extends TextVertexOutputFormat<LongWritab
 			b.append(vertex.getValue().getInternalWeight());
 			b.append("\t");
 			
-			for (Edge<LongWritable,LongWritable> e: vertex.getEdges()){
+			for (Edge<Text,LongWritable> e: vertex.getEdges()){
 				b.append(e.getTargetVertexId());
 				b.append(":");
 				b.append(e.getValue());
@@ -50,7 +48,7 @@ public class LouvainVertexOutputFormat extends TextVertexOutputFormat<LongWritab
 			}
 			b.setLength(b.length() - 1);
 			
-			getRecordWriter().write(new Text(vertex.getId().toString()), new Text(b.toString()));
+			getRecordWriter().write(vertex.getId(), new Text(b.toString()));
 			
 		}
 

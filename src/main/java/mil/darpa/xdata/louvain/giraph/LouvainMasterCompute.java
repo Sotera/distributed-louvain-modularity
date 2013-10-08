@@ -1,13 +1,5 @@
 package mil.darpa.xdata.louvain.giraph;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.giraph.aggregators.DoubleSumAggregator;
 import org.apache.giraph.aggregators.LongSumAggregator;
 import org.apache.giraph.master.DefaultMasterCompute;
@@ -16,6 +8,10 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.LongWritable;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -46,9 +42,9 @@ public class LouvainMasterCompute extends DefaultMasterCompute{
         public void initialize() throws InstantiationException, IllegalAccessException {
                 this.registerAggregator(LouvainVertex.CHANGE_AGG, LongSumAggregator.class);
                 this.registerPersistentAggregator(LouvainVertex.TOTAL_EDGE_WEIGHT_AGG, LongSumAggregator.class);
-                for (int i =0; i < LouvainVertex.getNumQAggregators(getConf()); i++){
-                	this.registerPersistentAggregator(LouvainVertex.ACTUAL_Q_AGG+i, DoubleSumAggregator.class);
-                }
+                //for (int i =0; i < LouvainVertex.getNumQAggregators(getConf()); i++){
+                	this.registerPersistentAggregator(LouvainVertex.ACTUAL_Q_AGG, DoubleSumAggregator.class);
+                //}
                 
         }
 
@@ -102,9 +98,9 @@ public class LouvainMasterCompute extends DefaultMasterCompute{
 
         private double getActualQ(){
         	 double actualQ = 0.0;
-        	 for (int i =0; i < LouvainVertex.getNumQAggregators(getConf()); i++){
-        		 actualQ += ( (DoubleWritable) getAggregatedValue(LouvainVertex.ACTUAL_Q_AGG+i) ).get();
-             }
+        	 //for (int i =0; i < LouvainVertex.getNumQAggregators(getConf()); i++){
+        		 actualQ += ( (DoubleWritable) getAggregatedValue(LouvainVertex.ACTUAL_Q_AGG) ).get();
+             //}
         	 return actualQ;
         }
 
@@ -146,6 +142,7 @@ public class LouvainMasterCompute extends DefaultMasterCompute{
                 String outputPath = getConf().get("mapred.output.dir");
                 String dir = outputPath.substring(0, outputPath.lastIndexOf("/"));
                 String filename = getConf().get("fs.defaultFS")+dir+"/_COMPLETE";
+                //String filename = "hdfs://xd-namenode:8020"+dir+"/_COMPLETE";
                 System.out.println("Writing "+filename);
                 writeFile(filename,message);
         }
@@ -159,6 +156,7 @@ public class LouvainMasterCompute extends DefaultMasterCompute{
                 String stage = outputPath.substring(lastIndexOfSlash+1);
                 String stagenumber = stage.substring(stage.lastIndexOf("_")+1);
                 String filename = getConf().get("fs.defaultFS")+dir+"/_q_"+stagenumber;
+                //String filename = "hdfs://xd-namenode:8020"+dir+"/_q_"+stagenumber;
                 writeFile(filename,message);
 
         }
@@ -176,6 +174,7 @@ public class LouvainMasterCompute extends DefaultMasterCompute{
                 }
                 else{
                         String filename = getConf().get("fs.defaultFS")+dir+"/_q_"+previousStageNumber;
+                        //String filename = "hdfs://xd-namenode:8020"+dir+"/_q_"+previousStageNumber;
                         String result = this.readFile(filename).trim();
                         return Double.parseDouble(result);
                 }

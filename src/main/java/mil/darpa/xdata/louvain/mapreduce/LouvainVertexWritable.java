@@ -1,31 +1,32 @@
 package mil.darpa.xdata.louvain.mapreduce;
 
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableUtils;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.hadoop.io.Writable;
-
 
 /**
  * Writable class to represent community information for compressing a graph
  * by its communities.
  */
-public class LouvainVertexWritable implements Writable{
+public class LouvainVertexWritable implements Writable {
 
 	long weight;
-	Map<Long,Long> edges;
+	Map<String,Long> edges;
 	
 	
 	@Override
 	public void readFields(DataInput in) throws IOException {
 		weight = in.readLong();
 		int edgeSize = in.readInt();
-		edges = new HashMap<Long,Long>(edgeSize);
+		edges = new HashMap<String,Long>(edgeSize);
 		for (int i =0; i< edgeSize; i++){
-			edges.put(in.readLong(), in.readLong());
+			edges.put(WritableUtils.readString(in), in.readLong());
 		}
 		
 	}
@@ -34,8 +35,8 @@ public class LouvainVertexWritable implements Writable{
 	public void write(DataOutput out) throws IOException {
 		out.writeLong(weight);
 		out.writeInt(edges.size());
-		for (Map.Entry<Long,Long> entry : edges.entrySet()){
-			out.writeLong(entry.getKey());
+		for (Map.Entry<String,Long> entry : edges.entrySet()){
+			WritableUtils.writeString(out, entry.getKey());
 			out.writeLong(entry.getValue());
 		}
 	}
@@ -45,11 +46,11 @@ public class LouvainVertexWritable implements Writable{
 		
 		LouvainVertexWritable vertex = new LouvainVertexWritable();
 		vertex.weight = Long.parseLong(weight);
-		Map<Long,Long> edgeMap = new HashMap<Long,Long>();
+		Map<String,Long> edgeMap = new HashMap<String,Long>();
 		if (edges.length() > 0){
 			for (String edgeTuple: edges.split(",")){
 				String[] edgeTokens = edgeTuple.split(":");
-				edgeMap.put(Long.parseLong(edgeTokens[0]), Long.parseLong(edgeTokens[1]));
+				edgeMap.put(edgeTokens[0], Long.parseLong(edgeTokens[1]));
 			}
 		}
 		vertex.edges = edgeMap;
