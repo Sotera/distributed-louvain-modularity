@@ -6,7 +6,6 @@ import org.apache.giraph.graph.Vertex;
 import org.apache.giraph.io.formats.TextVertexInputFormat;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
@@ -38,7 +37,7 @@ public class LouvainVertexInputFormat extends TextVertexInputFormat<Text, Louvai
 	protected class LouvainVertexReader extends TextVertexReader {
 
 		@Override
-		public Vertex<Text, LouvainNodeState, LongWritable, Writable> getCurrentVertex() throws IOException, InterruptedException {
+		public Vertex<Text, LouvainNodeState, LongWritable> getCurrentVertex() throws IOException, InterruptedException {
 
 			String line = getRecordReader().getCurrentValue().toString();
 			String[] tokens = line.trim().split("\t");
@@ -83,7 +82,7 @@ public class LouvainVertexInputFormat extends TextVertexInputFormat<Text, Louvai
 				edgesList.add(EdgeFactory.create(entry.getKey(), entry.getValue()));
 			}
 
-			Vertex<Text, LouvainNodeState, LongWritable, Writable> vertex = this.getConf().createVertex();
+			Vertex<Text, LouvainNodeState, LongWritable> vertex = this.getConf().createVertex();
 			vertex.initialize(id, state, edgesList);
 
 			return vertex;

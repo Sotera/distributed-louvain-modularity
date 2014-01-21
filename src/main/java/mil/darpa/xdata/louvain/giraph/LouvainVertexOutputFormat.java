@@ -32,7 +32,7 @@ public class LouvainVertexOutputFormat extends TextVertexOutputFormat<Text,Louva
 
 		@Override
 		public void writeVertex(
-				Vertex<Text, LouvainNodeState, LongWritable, ?> vertex)
+				Vertex<Text, LouvainNodeState, LongWritable> vertex)
 				throws IOException, InterruptedException {
 			StringBuilder b = new StringBuilder();
 			b.append(vertex.getValue().getCommunity());

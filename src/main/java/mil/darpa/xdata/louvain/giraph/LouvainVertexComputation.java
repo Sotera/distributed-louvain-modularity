@@ -2,6 +2,7 @@ package mil.darpa.xdata.louvain.giraph;
 
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.edge.EdgeFactory;
+import org.apache.giraph.graph.AbstractComputation;
 import org.apache.giraph.graph.Vertex;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.LongWritable;
@@ -37,7 +38,7 @@ import java.util.Map;
  * @author Eric Kimbrel - Sotera Defense
  * 
  */
-public class LouvainVertex extends Vertex<Text, LouvainNodeState, LongWritable, LouvainMessage> {
+public class LouvainVertexComputation extends AbstractComputation<Text, LouvainNodeState, LongWritable, LouvainMessage,LouvainMessage> {
 
 	// constants used to register and lookup aggregators
 	public static final String CHANGE_AGG = "change_aggregator";
@@ -61,45 +62,47 @@ public class LouvainVertex extends Vertex<Text, LouvainNodeState, LongWritable, 
 	}
 
 	@Override
-	public void compute(Iterable<LouvainMessage> messages) throws IOException {
+	public void compute(Vertex<Text, LouvainNodeState, LongWritable> vertex, Iterable<LouvainMessage> messages) throws IOException {
 
 		long superstep = getSuperstep();
 		int minorstep = (int) (superstep % 3); // the step in this iteration
 		int iteration = (int) (superstep / 3); // the current iteration, two
 												// iterations make a full pass.
-
+		
+		LouvainNodeState vertexValue = vertex.getValue();
+		
 		// count the total edge weight of the graph on the first super step only
 		if (superstep == 0) {
-			aggregate(TOTAL_EDGE_WEIGHT_AGG, new LongWritable(getValue().getNodeWeight() + getValue().getInternalWeight()));
+			aggregate(TOTAL_EDGE_WEIGHT_AGG, new LongWritable(vertexValue.getNodeWeight() + vertexValue.getInternalWeight()));
 		}
 
 		// nodes that have no edges send themselves a message on the step 0
-		if (superstep == 0 && !getEdges().iterator().hasNext()) {
-			this.sendMessage(this.getId(), new LouvainMessage());
-			voteToHalt();
+		if (superstep == 0 && !vertex.getEdges().iterator().hasNext()) {
+			this.sendMessage(vertex.getId(), new LouvainMessage());
+			vertex.voteToHalt();
 			return;
 		}
 		// nodes that have no edges aggregate their Q value and exit computation
 		// on step 1
-		else if (superstep == 1 && !getEdges().iterator().hasNext()) {
-			double q = calculateActualQ(new ArrayList<LouvainMessage>());
+		else if (superstep == 1 && !vertex.getEdges().iterator().hasNext()) {
+			double q = calculateActualQ(vertex,new ArrayList<LouvainMessage>());
 			aggregateQ(q);
-			voteToHalt();
+			vertex.voteToHalt();
 			return;
 		}
 
 		// at the start of each full pass check to see if progress is still
 		// being made, if not halt
 		if (minorstep == 1 && iteration > 0 && iteration % 2 == 0) {
-			getValue().setChanged(0); // change count is per pass
+			vertexValue.setChanged(0); // change count is per pass
 			long totalChange = ((LongWritable) getAggregatedValue(CHANGE_AGG)).get();
-			getValue().getChangeHistory().add(totalChange);
+			vertexValue.getChangeHistory().add(totalChange);
 
 			// if halting aggregate q value and replace node edges with
 			// community edges (for next stage in pipeline)
-			if (LouvainMasterCompute.decideToHalt(getValue().getChangeHistory(), getConf())) {
-				double q = calculateActualQ(messages);
-				replaceNodeEdgesWithCommunityEdges(messages);
+			if (LouvainMasterCompute.decideToHalt(vertexValue.getChangeHistory(), getConf())) {
+				double q = calculateActualQ(vertex,messages);
+				replaceNodeEdgesWithCommunityEdges(vertex,messages);
 				aggregateQ(q);
 				return;
 				// note: we did not vote to halt, MasterCompute will halt
@@ -111,26 +114,26 @@ public class LouvainVertex extends Vertex<Text, LouvainNodeState, LongWritable, 
 			switch (minorstep) {
 
 			case 0:
-				getAndSendCommunityInfo(messages);
+				getAndSendCommunityInfo(vertex,messages);
 
 				// if the next step well require a progress check,
 				// aggregate the number of nodes who have changed community.
 				if (iteration > 0 && iteration % 2 == 0) {
-					aggregate(CHANGE_AGG, new LongWritable(getValue().getChanged()));
+					aggregate(CHANGE_AGG, new LongWritable(vertexValue.getChanged()));
 				}
 
 				break;
 			case 1:
-				calculateBestCommunity(messages, iteration);
+				calculateBestCommunity(vertex,messages, iteration);
 				break;
 			case 2:
-				updateCommunities(messages);
+				updateCommunities(vertex,messages);
 				break;
 			default:
 				throw new IllegalArgumentException("Invalid minorstep: " + minorstep);
 			}
 		} finally {
-			voteToHalt();
+			vertex.voteToHalt();
 		}
 
 	}
@@ -151,29 +154,29 @@ public class LouvainVertex extends Vertex<Text, LouvainNodeState, LongWritable, 
 	 * 
 	 * @param messages
 	 */
-	private void getAndSendCommunityInfo(Iterable<LouvainMessage> messages) {
-		LouvainNodeState state = this.getValue();
+	private void getAndSendCommunityInfo(Vertex<Text, LouvainNodeState, LongWritable> vertex, Iterable<LouvainMessage> messages) {
+		LouvainNodeState state = vertex.getValue();
 		// set new community information.
 		if (getSuperstep() > 0) {
 			Iterator<LouvainMessage> it = messages.iterator();
 			if (!it.hasNext()) {
-				throw new IllegalStateException("No community info recieved in getAndSendCommunityInfo! Superstep: " + getSuperstep() + " id: " + this.getId());
+				throw new IllegalStateException("No community info recieved in getAndSendCommunityInfo! Superstep: " + getSuperstep() + " id: " + vertex.getId());
 			}
 			LouvainMessage inMess = it.next();
 			if (it.hasNext()) {
-				throw new IllegalStateException("More than one community info packets recieved in getAndSendCommunityInfo! Superstep: " + getSuperstep() + " id: " + this.getId());
+				throw new IllegalStateException("More than one community info packets recieved in getAndSendCommunityInfo! Superstep: " + getSuperstep() + " id: " + vertex.getId());
 			}
 			state.setCommunity(inMess.getCommunityId());
 			state.setCommunitySigmaTotal(inMess.getCommunitySigmaTotal());
 		}
 
 		// send community info to all neighbors
-		for (Edge<Text, LongWritable> edge : getEdges()) {
+		for (Edge<Text, LongWritable> edge : vertex.getEdges()) {
 			LouvainMessage outMess = new LouvainMessage();
 			outMess.setCommunityId(state.getCommunity());
 			outMess.setCommunitySigmaTotal(state.getCommunitySigmaTotal());
 			outMess.setEdgeWeight(edge.getValue().get());
-			outMess.setSourceId(getId().toString());
+			outMess.setSourceId(vertex.getId().toString());
 			this.sendMessage(edge.getTargetVertexId(), outMess);
 		}
 
@@ -190,9 +193,9 @@ public class LouvainVertex extends Vertex<Text, LouvainNodeState, LongWritable, 
 	 * @param messages
 	 * @param iteration
 	 */
-	private void calculateBestCommunity(Iterable<LouvainMessage> messages, int iteration) {
+	private void calculateBestCommunity(Vertex<Text, LouvainNodeState, LongWritable> vertex, Iterable<LouvainMessage> messages, int iteration) {
 
-		LouvainNodeState state = getValue();
+		LouvainNodeState state = vertex.getValue();
 
 		// group messages by communities.
 		HashMap<String, LouvainMessage> communityMap = new HashMap<String, LouvainMessage>();
@@ -211,7 +214,7 @@ public class LouvainVertex extends Vertex<Text, LouvainNodeState, LongWritable, 
 		}
 
 		// calculate change in Q for each potential community
-		String bestCommunityId = getValue().getCommunity();
+		String bestCommunityId = vertex.getValue().getCommunity();
 		String startingCommunityId = bestCommunityId;
 		BigDecimal maxDeltaQ = new BigDecimal("0.0");
 		for (Map.Entry<String, LouvainMessage> entry : communityMap.entrySet()) {
@@ -243,7 +246,7 @@ public class LouvainVertex extends Vertex<Text, LouvainNodeState, LongWritable, 
 
 		// send our node weight to the community hub to be summed in next
 		// superstep
-		this.sendMessage(new Text(state.getCommunity()), new LouvainMessage(state.getCommunity(), state.getNodeWeight() + state.getInternalWeight(), 0, getId().toString()));
+		this.sendMessage(new Text(state.getCommunity()), new LouvainMessage(state.getCommunity(), state.getNodeWeight() + state.getInternalWeight(), 0, vertex.getId().toString()));
 	}
 
 	/**
@@ -288,10 +291,10 @@ public class LouvainVertex extends Vertex<Text, LouvainNodeState, LongWritable, 
 	 * 
 	 * @param messages
 	 */
-	private void updateCommunities(Iterable<LouvainMessage> messages) {
+	private void updateCommunities(Vertex<Text, LouvainNodeState, LongWritable> vertex, Iterable<LouvainMessage> messages) {
 		// sum all community contributions
 		LouvainMessage sum = new LouvainMessage();
-		sum.setCommunityId(getId().toString());
+		sum.setCommunityId(vertex.getId().toString());
 		sum.setCommunitySigmaTotal(0);
 		for (LouvainMessage m : messages) {
 			sum.addToSigmaTotal(m.getCommunitySigmaTotal());
@@ -306,22 +309,22 @@ public class LouvainVertex extends Vertex<Text, LouvainNodeState, LongWritable, 
 	/**
 	 * Calculate this nodes contribution for the actual q value of the graph.
 	 */
-	private double calculateActualQ(Iterable<LouvainMessage> messages) {
+	private double calculateActualQ(Vertex<Text, LouvainNodeState, LongWritable> vertex, Iterable<LouvainMessage> messages) {
 		// long start = System.currentTimeMillis();
-		LouvainNodeState state = getValue();
+		LouvainNodeState state = vertex.getValue();
 		long k_i_in = state.getInternalWeight();
 		for (LouvainMessage m : messages) {
 			if (m.getCommunityId().equals(state.getCommunity())) {
 				try {
-					k_i_in += this.getEdgeValue(new Text(m.getSourceId())).get();
+					k_i_in += vertex.getEdgeValue(new Text(m.getSourceId())).get();
 				} catch (NullPointerException e) {
-					throw new IllegalStateException("Node: " + getId() + " does not have edge: " + m.getSourceId() + "  check that the graph is bi-directional.");
+					throw new IllegalStateException("Node: " + vertex.getId() + " does not have edge: " + m.getSourceId() + "  check that the graph is bi-directional.");
 				}
 			}
 		}
-		long sigma_tot = getValue().getCommunitySigmaTotal();
+		long sigma_tot = vertex.getValue().getCommunitySigmaTotal();
 		long M = this.getTotalEdgeWeight();
-		long k_i = getValue().getNodeWeight() + getValue().getInternalWeight();
+		long k_i = vertex.getValue().getNodeWeight() + vertex.getValue().getInternalWeight();
 
 		double q = ((((double) k_i_in) / M) - (((double) (sigma_tot * k_i)) / Math.pow(M, 2)));
 		q = (q < 0) ? 0 : q;
@@ -340,7 +343,7 @@ public class LouvainVertex extends Vertex<Text, LouvainNodeState, LongWritable, 
 	 * 
 	 * @param messages
 	 */
-	private void replaceNodeEdgesWithCommunityEdges(Iterable<LouvainMessage> messages) {
+	private void replaceNodeEdgesWithCommunityEdges(Vertex<Text, LouvainNodeState, LongWritable> vertex, Iterable<LouvainMessage> messages) {
 
 		// group messages by communities.
 		HashMap<String, LouvainMessage> communityMap = new HashMap<String, LouvainMessage>();
@@ -361,7 +364,7 @@ public class LouvainVertex extends Vertex<Text, LouvainNodeState, LongWritable, 
 		for (Map.Entry<String, LouvainMessage> entry : communityMap.entrySet()) {
 			edges.add(EdgeFactory.create(new Text(entry.getKey()), new LongWritable(entry.getValue().getEdgeWeight())));
 		}
-		this.setEdges(edges);
+		vertex.setEdges(edges);
 	}
 
 }

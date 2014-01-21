@@ -40,10 +40,10 @@ public class LouvainMasterCompute extends DefaultMasterCompute{
 
         @Override
         public void initialize() throws InstantiationException, IllegalAccessException {
-                this.registerAggregator(LouvainVertex.CHANGE_AGG, LongSumAggregator.class);
-                this.registerPersistentAggregator(LouvainVertex.TOTAL_EDGE_WEIGHT_AGG, LongSumAggregator.class);
+                this.registerAggregator(LouvainVertexComputation.CHANGE_AGG, LongSumAggregator.class);
+                this.registerPersistentAggregator(LouvainVertexComputation.TOTAL_EDGE_WEIGHT_AGG, LongSumAggregator.class);
                 //for (int i =0; i < LouvainVertex.getNumQAggregators(getConf()); i++){
-                	this.registerPersistentAggregator(LouvainVertex.ACTUAL_Q_AGG, DoubleSumAggregator.class);
+                	this.registerPersistentAggregator(LouvainVertexComputation.ACTUAL_Q_AGG, DoubleSumAggregator.class);
                 //}
                 
         }
@@ -66,12 +66,12 @@ public class LouvainMasterCompute extends DefaultMasterCompute{
         
 
                 if (superstep == 1){
-                        long m = ( (LongWritable) getAggregatedValue(LouvainVertex.TOTAL_EDGE_WEIGHT_AGG)).get();
+                        long m = ( (LongWritable) getAggregatedValue(LouvainVertexComputation.TOTAL_EDGE_WEIGHT_AGG)).get();
                         System.out.println("Graph Weight = "+m);
                 }
 
                 else if (minorstep ==1 && iteration > 0 && iteration % 2 == 0){
-                        long totalChange = ( (LongWritable) getAggregatedValue(LouvainVertex.CHANGE_AGG)).get();
+                        long totalChange = ( (LongWritable) getAggregatedValue(LouvainVertexComputation.CHANGE_AGG)).get();
                         history.add(totalChange);
                         halt = decideToHalt(history,getConf());
                         if (halt){
@@ -99,7 +99,7 @@ public class LouvainMasterCompute extends DefaultMasterCompute{
         private double getActualQ(){
         	 double actualQ = 0.0;
         	 //for (int i =0; i < LouvainVertex.getNumQAggregators(getConf()); i++){
-        		 actualQ += ( (DoubleWritable) getAggregatedValue(LouvainVertex.ACTUAL_Q_AGG) ).get();
+        		 actualQ += ( (DoubleWritable) getAggregatedValue(LouvainVertexComputation.ACTUAL_Q_AGG) ).get();
              //}
         	 return actualQ;
         }

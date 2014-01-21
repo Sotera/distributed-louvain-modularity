@@ -1,7 +1,7 @@
 Distributed Louvain Modularity
 ==============================
 This project is a Giraph/Hadoop implementation of a distributed version of the Louvain community detection algorithm
-described in "Fast unfolding of communities in large networks” - http://arxiv.org/pdf/0803.0476.pdf 
+described in "Fast unfolding of communities in large networks��� - http://arxiv.org/pdf/0803.0476.pdf 
 
 There are three main parts to the project.
 
@@ -13,24 +13,26 @@ The map reduce and giraph job then run in a cycle, detecting communities and com
 
 Build
 -----
+This build depends on giraph-1.1.0(-SNAPSHOT), if you want a more stable version using giraph 1.0 please see our other
+branches in git-hub.  These build instructions assume you want to run giraph on YARN, if you want to use giraph on mapreduce instead 
+omit the hadoop_yarn flag from your build.
+
 Prior to building you must first download appache giraph and build a version for your cluster.  
 Then install the giraph-core-with-dependencies.jar into your local mvn repository.
 
-These are instructions for building Giraph 1.0 against CDH 4.2.0.
+These are instructions for building Giraph 1.1.0-SNAPSHOT against hadoop 2.2.0-cdh5.0.0-beta-1 
 
-1. Download Giraph (http://giraph.apache.org/) -> (http://www.apache.org/dyn/closer.cgi/giraph/giraph-1.0.0)
+1. Get the code for giraph 1.1.0(-SNAPSHOT) from https://github.com/apache/giraph/.  Get the latest code and not the 1.0 release
 
-2. Extract.
+2. Check on the status of GIRAPH-819  https://issues.apache.org/jira/browse/GIRAPH-819  if this fix has not been included in the code base
+   you'll need to apply the patch yourself.
 
-3. Find the hadoop_cdh4.1.2 profile within pom.xml and copy the entire section and paste below.
 
-4. Edit the new section changing instances of 4.1.2 to 4.2.0 within the section.
+3. From the command line at the top level type 'mvn -Dhadoop.version=2.2.0-cdh5.0.0-beta-1 -DskipTests -Phadoop_yarn clean install'.  
+   This will install giraph-core-1.0.0.jar in your local maven repository specifically usable for CDH 5.0.0 on YARN.  You only need
+   giraph-core, if Giraph Distribution fails to build its okay.
 
-5. From the command line at the top level type 'mvn -Phadoop_cdh4.2.0 -DskipTests clean install'
-
-6. This will install giraph-core-1.0.0.jar in your local maven repository specifically usable for CDH 4.2.0
-
-7. You should now be able to build the LouvainModularity job using ./build.sh
+4. You should now be able to build the LouvainModularity job using ./build.sh or by running 'mvn clean install  assembly:single'
 
 Example Run
 -----------
