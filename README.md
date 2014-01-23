@@ -11,11 +11,21 @@ There are three main parts to the project.
 
 The map reduce and giraph job then run in a cycle, detecting communities and compressing the graph until no significant progress is being made, and then exits.
 
+Running on PURE YARN (or not)
+-----
+The steps below assume you are running a YARN cluster and wish to run giraph in PURE_YARN mode and not on top of mapreduce.
+If you want to run giraph on mapreduce instead:
+
+1.  omit the hadoop_yarn flag from the giraph build
+
+2.  prior to running the louvain.py script ensure the PURE_YARN flag is set to False in your cluster_env.py file
+
+
 Build
 -----
 This build depends on giraph-1.1.0(-SNAPSHOT), if you want a more stable version using giraph 1.0 please see our other
 branches in git-hub.  These build instructions assume you want to run giraph on YARN, if you want to use giraph on mapreduce instead 
-omit the hadoop_yarn flag from your build.
+omit the hadoop_yarn flag from your build and set the PURE_YARN flag to False in the pythong run scripts prior to running on a cluster.
 
 Prior to building you must first download appache giraph and build a version for your cluster.  
 Then install the giraph-core-with-dependencies.jar into your local mvn repository.
@@ -33,14 +43,24 @@ These are instructions for building Giraph 1.1.0-SNAPSHOT against hadoop 2.2.0-c
    giraph-core, if Giraph Distribution fails to build its okay.
 
 4. You should now be able to build the LouvainModularity job using ./build.sh or by running 'mvn clean install  assembly:single'
+   After building verify target/louvain-giraph-1.1.0-SNAPSHOT-jar-with-dependencies.jar exists.  
 
 Example Run
 -----------
+
 A small example is included to verify installation and the general concept in the 'example' directory.
 
-To run, go to the example directory and type
+To run:
 
-> ./run_example.sh
+1. In the project root cp cluster_env_template.py to cluster_env.py
+
+2. Edit the settings in clsuter_env.py for your environemnt
+
+3. Create a directory to use in hdfs at /tmp/louvain-giraph-example,  give the yarn user access to this directory
+
+4. go to the example directory and type
+
+> sudo -u yarn ./run_example.sh
 
 Other Information
 -----------------

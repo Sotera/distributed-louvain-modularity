@@ -84,8 +84,7 @@ public class LouvainMasterCompute extends DefaultMasterCompute{
                         double actualQ = getActualQ();
                         System.out.println("superstep: "+superstep+" ACTUAL Q: "+actualQ);
                         this.haltComputation();
-
-
+                        
                         writeQvalue(Double.toString(actualQ));
                         int clippedQ = (int) (actualQ *10000);
                         int clippedPreviousQ = (int) (previousQ*10000);
@@ -140,9 +139,9 @@ public class LouvainMasterCompute extends DefaultMasterCompute{
          */
         private void markPipeLineComplete(String message){
                 String outputPath = getConf().get("mapred.output.dir");
-                String dir = outputPath.substring(0, outputPath.lastIndexOf("/"));
-                String filename = getConf().get("fs.defaultFS")+dir+"/_COMPLETE";
-                //String filename = "hdfs://xd-namenode:8020"+dir+"/_COMPLETE";
+                String dir = outputPath.substring(0, outputPath.lastIndexOf("/")); 
+                //String filename = getConf().get("fs.defaultFS")+dir+"/_COMPLETE";
+                String filename = dir+"/_COMPLETE";
                 System.out.println("Writing "+filename);
                 writeFile(filename,message);
         }
@@ -155,8 +154,8 @@ public class LouvainMasterCompute extends DefaultMasterCompute{
                 String dir = outputPath.substring(0, lastIndexOfSlash);
                 String stage = outputPath.substring(lastIndexOfSlash+1);
                 String stagenumber = stage.substring(stage.lastIndexOf("_")+1);
-                String filename = getConf().get("fs.defaultFS")+dir+"/_q_"+stagenumber;
-                //String filename = "hdfs://xd-namenode:8020"+dir+"/_q_"+stagenumber;
+                String filename = dir+"/_q_"+stagenumber;
+                //String filename = getConf().get("fs.defaultFS")+dir+"/_q_"+stagenumber;
                 writeFile(filename,message);
 
         }
@@ -173,8 +172,8 @@ public class LouvainMasterCompute extends DefaultMasterCompute{
                         return 0.0;
                 }
                 else{
-                        String filename = getConf().get("fs.defaultFS")+dir+"/_q_"+previousStageNumber;
-                        //String filename = "hdfs://xd-namenode:8020"+dir+"/_q_"+previousStageNumber;
+                	    String filename = dir+"/_q_"+previousStageNumber;
+                		//String filename = getConf().get("fs.defaultFS")+dir+"/_q_"+previousStageNumber;
                         String result = this.readFile(filename).trim();
                         return Double.parseDouble(result);
                 }

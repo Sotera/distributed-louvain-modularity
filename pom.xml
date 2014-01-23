@@ -4,7 +4,7 @@
   <name>GiraphLouvain</name>
   <groupId>mil.darpa.xdata</groupId>
   <artifactId>louvain-giraph</artifactId>
-  <version>0.1-SNAPSHOT</version>
+  <version>1.1.0-SNAPSHOT</version>
   <build>
     <plugins>
       <plugin>

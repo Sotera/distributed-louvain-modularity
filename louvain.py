@@ -2,10 +2,8 @@ import os
 import sys
 import subprocess
 import time
+from cluster_env import * #contains all cluster/environment specific settings for the job.
 
-
-GIRAPH_SLAVES=1
-ZK_LIST='localhost:2181'
 
 def main(ip,op):
   print ""
@@ -55,38 +53,68 @@ def main(ip,op):
 
 
 def giraph(ip,op):
+  ip = HDFS_BASE+ip
+  op = HDFS_BASE+op
   print "\nrunning giraph phase "+ip+" -> "+op+"\n"
   global GIRAPH_SLAVES  
   t1 = time.time()
   subprocess.call(['hadoop','fs','-rm','-r',op])
-  result = subprocess.call(['hadoop','jar',
-    'target/louvain-giraph-0.1-SNAPSHOT-jar-with-dependencies.jar',
-    'org.apache.giraph.GiraphRunner',
-    '-Dgiraph.zkList='+ZK_LIST,
-    '-Dgiraph.useSuperstepCounters=false',
-    '-Dmapred.child.java.opts=-Xmx1g',
-    'mil.darpa.xdata.louvain.giraph.LouvainVertex',
-    '-w',str(GIRAPH_SLAVES),
-    '-mc','mil.darpa.xdata.louvain.giraph.LouvainMasterCompute',
-    '-vif','mil.darpa.xdata.louvain.giraph.LouvainVertexInputFormat',
-    '-of', 'mil.darpa.xdata.louvain.giraph.LouvainVertexOutputFormat',
-    '-vip',ip,
-    '-op',op,
-    '-ca','giraph.vertex.input.dir='+ip,
-    '-ca',' mapreduce.task.timeout=10800000',
-    '-ca','actual.Q.aggregators=1',
-    '-ca','minimum.progress=2000',
-    '-ca','progress.tries=1'
-  ])
+  giraph_job_args = []
+  giraph_job_args.append('hadoop')
+  giraph_job_args.append('jar')
+  giraph_job_args.append(LOUVAIN_JAR_PATH)
+  giraph_job_args.append('org.apache.giraph.GiraphRunner')
+  giraph_job_args.append('-Dgiraph.numComputeThreads='+COMPUTE_THREADS)
+  giraph_job_args.append('-Dgiraph.zkList='+ZK_LIST)
+  giraph_job_args.append('-Dgiraph.zkSessionMsecTimeout='+ZK_TIMEOUT)
+  if not PURE_YARN:
+    giraph_job_args.append('-Dgiraph.useSuperstepCounters=false') 
+  giraph_job_args.append('-Dgiraph.useOutOfCoreGraph='+OUT_OF_CORE_GRAPH)
+  giraph_job_args.append('-Dgiraph.useOutOfCoreMessages='+OUT_OF_CORE_MESSAGES)
+  if not PURE_YARN:
+    giraph_job_args.append('-Dmapred.child.java.opts=-Xmx1g')
+  giraph_job_args.append('mil.darpa.xdata.louvain.giraph.LouvainVertexComputation')
+  if PURE_YARN:
+    giraph_job_args.append('-yj')
+    giraph_job_args.append(LOUVAIN_JAR)
+    giraph_job_args.append('-yh')
+    giraph_job_args.append(YARN_HEAP)
+  giraph_job_args.append('-w')
+  giraph_job_args.append(str(GIRAPH_SLAVES))
+  giraph_job_args.append('-mc')
+  giraph_job_args.append('mil.darpa.xdata.louvain.giraph.LouvainMasterCompute')
+  giraph_job_args.append('-vif')
+  giraph_job_args.append('mil.darpa.xdata.louvain.giraph.LouvainVertexInputFormat')
+  giraph_job_args.append('-vof')
+  giraph_job_args.append('mil.darpa.xdata.louvain.giraph.LouvainVertexOutputFormat')
+  giraph_job_args.append('-vip')
+  giraph_job_args.append(ip)
+  giraph_job_args.append('-op')
+  giraph_job_args.append(op)
+  giraph_job_args.append('-ca')
+  giraph_job_args.append('giraph.vertex.input.dir='+ip)
+  giraph_job_args.append('-ca')
+  giraph_job_args.append('mapreduce.task.timeout=10800000')
+  giraph_job_args.append('-ca')
+  giraph_job_args.append('actual.Q.aggregators=1')
+  giraph_job_args.append('-ca')
+  giraph_job_args.append('minimum.progress=2000')
+  giraph_job_args.append('-ca')
+  giraph_job_args.append('progress.tries=1')
+  
+  print 'running: ',giraph_job_args
+  result = subprocess.call(giraph_job_args)
   
   # Adjust as needed to reduce slaves allocated as workload decreases.
-  GIRAPH_SLAVES=max(2,int(GIRAPH_SLAVES*.75))
+  GIRAPH_SLAVES=max(2,int(GIRAPH_SLAVES*GIRAPH_SLAVES_DECAY))
   elapsed = time.time() - t1
   print "giraph exit status: "+str(result)+" time (sec): "+str(elapsed)
   return (result,elapsed)
 
 
 def mapreduce(ip,op):
+  ip = HDFS_BASE+ip
+  op = HDFS_BASE+op
   print "\nrunning mapreduce phase "+ip+" -> "+op+"\n"
 
   print "delete output dir: "+op
@@ -95,7 +123,7 @@ def mapreduce(ip,op):
 
 
   result = subprocess.call(['hadoop','jar', 
-    'target/louvain-giraph-0.1-SNAPSHOT-jar-with-dependencies.jar',
+    LOUVAIN_JAR_PATH,
     'mil.darpa.xdata.louvain.mapreduce.CommunityCompression',
     ip, op])
 
@@ -116,6 +144,7 @@ if __name__ == '__main__':
     print " run a single mapreduce pass"
     print "\t"+sys.argv[0]+" -mapreduce <hdfs input path> <hdfs output path>"
     sys.exit(1)
+
 
   if "-giraph" == sys.argv[1]:
     giraph(sys.argv[2],sys.argv[3])
