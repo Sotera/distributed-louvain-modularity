@@ -5,7 +5,7 @@ Distributed Louvain Modularity
 
 ## What is it?
 This project is an implementation of the Louvain Community Detection algorithm described in ["Fast unfolding of communities in large networks"](http://arxiv.org/pdf/0803.0476.pdf) which (1) assigns communities to nodes in a graph based purely on graph structure and statistics and (2) compresses the community-tagged graph into a smaller one.  This process can then be repeated to build several compressed versions of the same original graph.  
-![How it works](docs/images/louvain.png)
+![How it works](docs/images/louvain.PNG)
 Our implmentation, based off of Giraph and Hadoop, is distributed and can execute against data sets with hundreds of millions of nodes and edges in a relatively short amount of time.  
 
 ## Why do I care?
