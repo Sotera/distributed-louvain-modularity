@@ -11,7 +11,7 @@ This process can then be repeated to build several community-aggregated versions
 
 #####[Interested in learing more?](https://github.com/Sotera/distributed-louvain-modularity/wiki/Explain-%22Distributed-Louvain-Modularity%22.)
 
-![Louvain Graph Compression](docs/images/compression.png)
+![Louvain Graph Compression](docs/images/Compression.png)
 ### Why do I care?
 Identifying communities in large networks based on graph structure is difficult to eyeball and computationally hard, but is  useful in understanding structure and strength of community metrics which may adhere to real-world relationships or constraints.  Furthermore, big-data size graph compression allows for analysis of networks at various aggregation levels which is useful in guided network analysis and drill-down operations.
 
