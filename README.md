@@ -71,7 +71,7 @@ To run:
 
 4. go to the example directory and type
 
-    sudo -u yarn ./run_example.sh
+`sudo -u yarn ./run_example.sh`
 
 Other Information
 -----------------
