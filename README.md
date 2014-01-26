@@ -1,7 +1,7 @@
 Distributed Louvain Modularity
 ==============================
 ![Louvain in Action](docs/images/animated.gif)
-#### What is it?
+### What is it?
 This project is an implementation of the Louvain Community Detection algorithm described in ["Fast unfolding of communities in large networks"](http://arxiv.org/pdf/0803.0476.pdf) which:
 
 1. assigns communities to nodes in a graph based on graph structure and statistics and 
@@ -11,19 +11,10 @@ This process can then be repeated to build several community-aggregated versions
 
 #####[Interested in learing more?](https://github.com/Sotera/distributed-louvain-modularity/wiki/Explain-%22Distributed-Louvain-Modularity%22.)
 
-## Why do I care?
-Identifying communities in large networks based on graph structure is difficult to eyeball and computationally hard, but is often useful in understanding structure and strength of community metrics may adhere to real-world relationships or constraints.  Furthermore, graph compression allows for analysis of networks at various aggregation levels which is useful in guided network analysis and drill-down operations.
+### Why do I care?
+Identifying communities in large networks based on graph structure is difficult to eyeball and computationally hard, but is  useful in understanding structure and strength of community metrics which may adhere to real-world relationships or constraints.  Furthermore, big-data size graph compression allows for analysis of networks at various aggregation levels which is useful in guided network analysis and drill-down operations.
 
-## How is the code split up?
-There are three main parts to the project.
-
-1. A giraph job, that detects communities in a graph structure.
-2. A map reduce job, that compresses a graph based on its community structure.
-3. A python script that sets up the cluster environment and job configuration, pipes the outputs of giraph job to the map reduce job, and pipes the output of the map reduce job to the giraph job.
-
-The map reduce and giraph job then run in a cycle, detecting communities and compressing the graph until no significant progress is being made, and then exits.
-
-## How can I use it?
+### How do I get it?
 
 Running on PURE YARN (or not)
 -----
