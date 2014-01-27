@@ -1,7 +1,7 @@
 Distributed Louvain Modularity
 ==============================
 ![Louvain in Action](docs/images/animated.gif)
-<i>Community Assignment phases of Louvain Modularity when applied to the Enron Email Data set.  In this image each node repsents an email address and color represents community.</i>
+<i>Community Assignment phases of Louvain Modularity when applied to the [Enron Email Data Set](https://www.cs.cmu.edu/~enron/).  In this image each node repsents an email address and color represents community.</i>
 ### What is it?
 This project is an implementation of the Louvain Community Detection algorithm described in ["Fast unfolding of communities in large networks"](http://arxiv.org/pdf/0803.0476.pdf) which:
 
