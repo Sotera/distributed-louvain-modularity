@@ -10,7 +10,7 @@ This project is an implementation of the Louvain Community Detection algorithm d
 
 This process can then be repeated to build several community-aggregated versions of the same original graph.
 
-#####[Interested in learing more?](https://github.com/Sotera/distributed-louvain-modularity/wiki/Explain-%22Distributed-Louvain-Modularity%22.)
+#####[Interested in learing more?](https://github.com/Sotera/distributed-louvain-modularity/wiki/Explain-Distributed-Louvain-Modularity.)
 
 ![Louvain Graph Compression](https://raw2.github.com/Sotera/distributed-louvain-modularity/master/docs/images/Compression.png)
 ### Why do I care?
