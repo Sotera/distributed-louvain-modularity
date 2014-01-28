@@ -1,6 +1,6 @@
 Distributed Louvain Modularity
 ==============================
-![Louvain in Action](docs/images/animated.gif)
+![Louvain in Action](https://raw2.github.com/Sotera/distributed-louvain-modularity/master/docs/images/animated.gif)
 <i>Community Assignment phases of Louvain Modularity when applied to the [Enron Email Data Set](https://www.cs.cmu.edu/~enron/).  In this image each node repsents an email address and color represents community.</i>
 ### What is it?
 This project is an implementation of the Louvain Community Detection algorithm described in ["Fast unfolding of communities in large networks"](http://arxiv.org/pdf/0803.0476.pdf) which:
@@ -12,7 +12,7 @@ This process can then be repeated to build several community-aggregated versions
 
 #####[Interested in learing more?](https://github.com/Sotera/distributed-louvain-modularity/wiki/Explain-%22Distributed-Louvain-Modularity%22.)
 
-![Louvain Graph Compression](docs/images/Compression.png)
+![Louvain Graph Compression](https://raw2.github.com/Sotera/distributed-louvain-modularity/master/docs/images/Compression.png)
 ### Why do I care?
 Identifying communities in large networks based on graph structure is difficult to eyeball and computationally hard, but is  useful in understanding structure and strength of community metrics which may adhere to real-world relationships or constraints.  Furthermore, big-data size graph compression allows for analysis of networks at various aggregation levels which is useful in guided network analysis and drill-down operations.
 
