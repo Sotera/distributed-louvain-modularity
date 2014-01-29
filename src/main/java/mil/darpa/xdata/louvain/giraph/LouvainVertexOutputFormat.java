@@ -1,5 +1,7 @@
 package mil.darpa.xdata.louvain.giraph;
 
+//import org.apache.commons.logging.Log;
+//import org.apache.commons.logging.LogFactory;
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.graph.Vertex;
 import org.apache.giraph.io.formats.TextVertexOutputFormat;
@@ -21,6 +23,8 @@ import java.io.IOException;
  */
 public class LouvainVertexOutputFormat extends TextVertexOutputFormat<Text,LouvainNodeState,LongWritable>{
 
+	//private static final Log LOG = LogFactory.getLog(LouvainVertexOutputFormat.class);
+	
 	@Override
 	public TextVertexWriter createVertexWriter(
 			TaskAttemptContext arg0) throws IOException, InterruptedException {
@@ -47,7 +51,7 @@ public class LouvainVertexOutputFormat extends TextVertexOutputFormat<Text,Louva
 				b.append(",");
 			}
 			b.setLength(b.length() - 1);
-			
+			//LOG.info("output: "+vertex.getId()+" "+b.toString());
 			getRecordWriter().write(vertex.getId(), new Text(b.toString()));
 			
 		}

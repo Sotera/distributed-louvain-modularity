@@ -1,5 +1,7 @@
 package mil.darpa.xdata.louvain.giraph;
 
+//import org.apache.commons.logging.Log;
+//import org.apache.commons.logging.LogFactory;
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.edge.EdgeFactory;
 import org.apache.giraph.graph.AbstractComputation;
@@ -40,6 +42,8 @@ import java.util.Map;
  */
 public class LouvainVertexComputation extends AbstractComputation<Text, LouvainNodeState, LongWritable, LouvainMessage,LouvainMessage> {
 
+	//private static final Log LOG = LogFactory.getLog(LouvainVertexComputation.class);
+	
 	// constants used to register and lookup aggregators
 	public static final String CHANGE_AGG = "change_aggregator";
 	public static final String TOTAL_EDGE_WEIGHT_AGG = "total_edge_weight_aggregator";
@@ -49,16 +53,9 @@ public class LouvainVertexComputation extends AbstractComputation<Text, LouvainN
 	// defaults to 1
 	public static final String ACTUAL_Q_AGG = "actual_q_aggregator";
 
-//	public static int getNumQAggregators(Configuration conf) {
-//		return conf.getInt("actual.Q.aggregators", 1);
-//	}
 
 	private void aggregateQ(Double q) {
-//		int aggregators = getNumQAggregators(getConf());
-//		if (0 < aggregators) {
-//			int modId = (int) this.getId().get() % aggregators;
-			aggregate(ACTUAL_Q_AGG, new DoubleWritable(q));
-//		}
+		aggregate(ACTUAL_Q_AGG, new DoubleWritable(q));
 	}
 
 	@Override
@@ -67,14 +64,42 @@ public class LouvainVertexComputation extends AbstractComputation<Text, LouvainN
 		long superstep = getSuperstep();
 		int minorstep = (int) (superstep % 3); // the step in this iteration
 		int iteration = (int) (superstep / 3); // the current iteration, two
-												// iterations make a full pass.
+		
+		// if an edge input format was used on the first step of the first pass the state will be null and must
+		// be initialized here.
+		if (superstep == 0 && (vertex.getValue() == null || vertex.getValue().getCommunity() == "") ){
+			LouvainNodeState state = new LouvainNodeState();
+			state.setCommunity(vertex.getId().toString());
+			state.setInternalWeight(0L);  // for setting initial internal weights the edge input format can not be used
+			long sigma_tot = 0L;
+			for (Edge<Text,LongWritable> e : vertex.getEdges()){
+				sigma_tot += e.getValue().get();
+			}
+			state.setCommunitySigmaTotal(sigma_tot);
+			state.setNodeWeight(sigma_tot);
+			vertex.setValue(state);
+		}
+		
+		
+		// log each nodes view of the world.
+		/*
+		if (superstep == 0  ){
+			LOG.info("NODE:  "+vertex.getId().toString());
+			int i = 0;
+			for (Edge<Text,LongWritable> e : vertex.getEdges()){
+				LOG.info("\tEDGE "+(++i)+": "+e.getTargetVertexId().toString()+":"+e.getValue());
+			}
+		}*/
+		
 		
 		LouvainNodeState vertexValue = vertex.getValue();
 		
-		// count the total edge weight of the graph on the first super step only
-		if (superstep == 0) {
+		// count total graph edge weight on first step
+		if (superstep== 0){
+			//LOG.info("NODE: "+vertex.getId().toString()+" aggreagating weight: "+(vertexValue.getNodeWeight() + vertexValue.getInternalWeight()));
 			aggregate(TOTAL_EDGE_WEIGHT_AGG, new LongWritable(vertexValue.getNodeWeight() + vertexValue.getInternalWeight()));
 		}
+		
 
 		// nodes that have no edges send themselves a message on the step 0
 		if (superstep == 0 && !vertex.getEdges().iterator().hasNext()) {
@@ -145,6 +170,7 @@ public class LouvainVertexComputation extends AbstractComputation<Text, LouvainN
 	 */
 	private long getTotalEdgeWeight() {
 		long m = ((LongWritable) getAggregatedValue(TOTAL_EDGE_WEIGHT_AGG)).get();
+		//LOG.info("total edge weight read as: "+m);
 		return m;
 	}
 

@@ -13,6 +13,9 @@ def main(ip,op):
   
   print "Removing ouput dir"
   subprocess.call(["hadoop","fs","-rm","-r",op])
+  print "mandatory 10 second sleep to ensure delete"
+  time.sleep(10)
+  print 'sleep completed'
   print ""
   giraph_times = []
   mapred_times = []
@@ -27,10 +30,10 @@ def main(ip,op):
       break
 
     if 1 == i:
-      (error,elapsed) = giraph(ip,op+"/giraph_1")
+      (error,elapsed) = giraph(ip,op+"/giraph_1",i)
       giraph_times.append(elapsed)
     else:
-      (error,elapsed) = giraph(op+"/mapreduce_"+str(i-1),op+"/giraph_"+str(i))
+      (error,elapsed) = giraph(op+"/mapreduce_"+str(i-1),op+"/giraph_"+str(i),i)
       giraph_times.append(elapsed)
    
     complete = (0 == subprocess.call(['hadoop','fs','-ls',op+'/_COMPLETE']))
@@ -52,13 +55,12 @@ def main(ip,op):
 
 
 
-def giraph(ip,op):
+def giraph(ip,op,iteration):
   ip = HDFS_BASE+ip
   op = HDFS_BASE+op
   print "\nrunning giraph phase "+ip+" -> "+op+"\n"
   global GIRAPH_SLAVES  
   t1 = time.time()
-  subprocess.call(['hadoop','fs','-rm','-r',op])
   giraph_job_args = []
   giraph_job_args.append('hadoop')
   giraph_job_args.append('jar')
@@ -83,12 +85,19 @@ def giraph(ip,op):
   giraph_job_args.append(str(GIRAPH_SLAVES))
   giraph_job_args.append('-mc')
   giraph_job_args.append('mil.darpa.xdata.louvain.giraph.LouvainMasterCompute')
-  giraph_job_args.append('-vif')
-  giraph_job_args.append('mil.darpa.xdata.louvain.giraph.LouvainVertexInputFormat')
+  if (iteration == 1 and EDGE_INPUT_FORMAT == True):
+     giraph_job_args.append("-eif")
+     giraph_job_args.append("mil.darpa.xdata.louvain.giraph.LouvainEdgeInputFormat")
+     giraph_job_args.append('-eip')
+     giraph_job_args.append(ip)
+  else: 
+    giraph_job_args.append('-vif')
+    giraph_job_args.append('mil.darpa.xdata.louvain.giraph.LouvainVertexInputFormat')
+    giraph_job_args.append('-vip')
+    giraph_job_args.append(ip)
+  
   giraph_job_args.append('-vof')
   giraph_job_args.append('mil.darpa.xdata.louvain.giraph.LouvainVertexOutputFormat')
-  giraph_job_args.append('-vip')
-  giraph_job_args.append(ip)
   giraph_job_args.append('-op')
   giraph_job_args.append(op)
   giraph_job_args.append('-ca')
@@ -101,6 +110,12 @@ def giraph(ip,op):
   giraph_job_args.append('minimum.progress=2000')
   giraph_job_args.append('-ca')
   giraph_job_args.append('progress.tries=1')
+  if (iteration ==1 and EDGE_INPUT_FORMAT == True):
+    giraph_job_args.append('-ca')
+    giraph_job_args.append('louvain.io.reverseEdgeDuplicator='+LOUVAIN_REVERSE_EDGE_DUPLICATOR)
+    giraph_job_args.append('-ca')
+    giraph_job_args.append(' louvain.io.edgeDelimiter='+LOUVAIN_EDGE_DELIMITER)
+  
   
   print 'running: ',giraph_job_args
   result = subprocess.call(giraph_job_args)
@@ -119,8 +134,6 @@ def mapreduce(ip,op):
 
   print "delete output dir: "+op
   t1 = time.time()
-  subprocess.call(['hadoop','fs','-rm','-r',op]) 
-
 
   result = subprocess.call(['hadoop','jar', 
     LOUVAIN_JAR_PATH,

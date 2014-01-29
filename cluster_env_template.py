@@ -1,3 +1,7 @@
+# is your initial data specified as an edge list?
+EDGE_INPUT_FORMAT = False
+LOUVAIN_EDGE_DELIMITER="\t"
+LOUVAIN_REVERSE_EDGE_DUPLICATOR="true"
 
 # are you running on PURE YARN?
 PURE_YARN=True
@@ -11,7 +15,7 @@ LOUVAIN_JAR_PATH = 'target/'+LOUVAIN_JAR
 
 # number of giraph slaves, in mapreduce you will need slaves+1 mappers, on yarn you will have
 # slaves + 2 containers.
-GIRAPH_SLAVES=2
+GIRAPH_SLAVES=1
 
 # reduce number of slaves by this factor at each level, over provisioning workers reduces giraph performance
 # so we automatically reduce the number of workers as the data set shrinks
