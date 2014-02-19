@@ -101,8 +101,6 @@ def giraph(ip,op,iteration):
   giraph_job_args.append('-op')
   giraph_job_args.append(op)
   giraph_job_args.append('-ca')
-  giraph_job_args.append('giraph.vertex.input.dir='+ip)
-  giraph_job_args.append('-ca')
   giraph_job_args.append('mapreduce.task.timeout=10800000')
   giraph_job_args.append('-ca')
   giraph_job_args.append('actual.Q.aggregators=1')
