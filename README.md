@@ -1,3 +1,7 @@
+This project is now deprecated. (See: [Distributed Graph Analytics](https://github.com/Sotera/distributed-graph-analytics))
+==========================================================
+
+
 Distributed Louvain Modularity
 ==============================
 ![Louvain in Action](https://raw2.github.com/Sotera/distributed-louvain-modularity/master/docs/images/animated.gif)
